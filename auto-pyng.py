@@ -1,25 +1,31 @@
-
 import csv  
 import subprocess as sp
 import time 
+from datetime import datetime
 
 print("i-comit.github.io \n")
 name = input("Enter the website url: ")
 interval = float(input("Enter interval time in seconds: "))
 
+now = datetime.now()
+titletime= datetime.date(now).strftime("%Y%m%d")
 
 starttime=time.time() 
+
+with open(f'{name}-PingTest{titletime}.csv', 'w', newline='') as outcsv:
+    writer = csv.writer(outcsv)
+    writer.writerow(["Time", "Packet Sent", "Packet Received", "Packet Loss", "Status"])
 
 while(True): 
     output = sp.getoutput(f'ping -n 3 {name} | find "Packets"')
     print (output)
+    print("packetsent: " + output[14:15])
 
-    with open(f'{name}-ping.csv', 'a') as f:
+    with open(f'{name}-PingTest{titletime}.csv', 'a') as f:
         writef = csv.writer(f)
+        t = time.localtime()
+        current_time = time.strftime("%H:%M:%S", t)
 
-        # write the header
-        writef.writerow([output])
+        writef.writerow( [current_time] + [output])
 
         time.sleep(interval - ((time.time() - starttime) % interval))
-
-
