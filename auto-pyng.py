@@ -19,13 +19,15 @@ with open(f'{name}-PingTest{titletime}.csv', 'w', newline='') as outcsv:
 while(True): 
     output = sp.getoutput(f'ping -n 3 {name} | find "Packets"')
     print (output)
-    print("packetsent: " + output[14:15])
+    packetsent = output[20:21]
+    packetreceived = output[34:35]
+
 
     with open(f'{name}-PingTest{titletime}.csv', 'a') as f:
         writef = csv.writer(f)
         t = time.localtime()
         current_time = time.strftime("%H:%M:%S", t)
 
-        writef.writerow( [current_time] + [output])
+        writef.writerow( [current_time] + [packetsent] + [packetreceived])
 
         time.sleep(interval - ((time.time() - starttime) % interval))
