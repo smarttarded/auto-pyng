@@ -29,17 +29,17 @@ class App(QMainWindow):
         self.urltext = QLineEdit(self)
         self.urltext.move(20, 20)
         self.urltext.resize(200,20)
-        # self.textbox = QLabel("ENTER WEBSITE URL HERE", self)
-        # self.textbox.move(240, 20)
-        # self.textbox.resize(200,20)      
+        self.textbox = QLabel("ENTER WEBSITE URL HERE", self)
+        self.textbox.move(240, 20)
+        self.textbox.resize(200,20)      
 
         # Create time interval textbox
         self.timetext = QLineEdit(self)
         self.timetext.move(20, 60)
         self.timetext.resize(200,20)
-        # self.textbox = QLabel("ENTER TIME INTERVAL HERE", self)
-        # self.textbox.move(240, 60)
-        # self.textbox.resize(200,20)   
+        self.textbox = QLabel("ENTER TIME INTERVAL HERE", self)
+        self.textbox.move(240, 60)
+        self.textbox.resize(200,20)   
         
         # Create a button in the window
         self.button = QPushButton('ENTER', self)
@@ -58,8 +58,8 @@ class App(QMainWindow):
     
     # @pyqtSlot()
     def on_click(self):
-        name = self.urltext.text()
-        interval = self.timetext.text()
+        name = str(self.urltext.text())
+        interval = int(self.timetext.text())
 
         now = datetime.now()
         titletime= datetime.date(now).strftime("%Y%m%d")
@@ -69,13 +69,12 @@ class App(QMainWindow):
         with open(f'{name}-PingTest{titletime}.csv', 'w', newline="") as outcsv:
             writer = csv.writer(outcsv)
             writer.writerow(["Time", "Packet Sent", "Packet Received", "Packet Loss", "Status"])
-            
+        while(True):       
             output = sp.getoutput(f'ping -n 3 {name} | find "Packets"')
             print (output)
             packetsent = output[20:21]
             packetreceived = output[34:35]
             packetloss = output[44:45]
-            print(packetloss)
 
             if(packetsent == packetreceived):
                 status= "UP"
@@ -95,7 +94,7 @@ class App(QMainWindow):
 
 
                 # QMessageBox.question(self, 'Message - pythonspot.com', "You typed: " + textboxValue, QMessageBox.Ok, QMessageBox.Ok)
-                self.textbox.setText("")
+                # self.textbox.setText("")
 
 
 if __name__ == '__main__':
