@@ -1,109 +1,98 @@
-import csv  
+from tkinter import *
 import subprocess as sp
+import csv
 import time 
+import threading
 from datetime import datetime
+window=Tk()
+window.geometry("600x250")
+window.iconbitmap('favicon.ico')
+window.title('     auto-pyng 0.1.1')
+window.eval('tk::PlaceWindow . center')
 
-import sys
-from PyQt5.QtWidgets import QLabel, QMainWindow,QDesktopWidget, QApplication, QTextEdit, QWidget, QPushButton, QAction, QLineEdit, QMessageBox
-from PyQt5.QtGui import QIcon, QTextBlock
-from PyQt5.QtCore import pyqtSlot
+window.minsize(500, 250)
+window.maxsize(800, 250)
 
-class App(QMainWindow):
-
-    def __init__(self):
-        super().__init__()
-        self.title = 'AUTO PYNG 0.0.1'
-        self.left = 10
-        self.top = 10
-        self.width = 700
-        self.height = 300
-        self.initUI()
+def getUrl():
+    urls=[]
+    name = str(e1.get().strip())
+    interval = int(e2.get().strip())
+    csvthread= threading.Thread(target=logCSV, args=(1,))
+    now = datetime.now()
+    titletime= datetime.date(now).strftime("%Y%m%d") 
+    with open(f'{name}-PingTest{titletime}.csv', 'w', newline="") as outcsv:
+                writer = csv.writer(outcsv)
+                writer.writerow(["Time", "Packet Sent", "Packet Received", "Packet Loss", "Status"])
+    csvthread.daemon = True
+    csvthread.start()
+    urls.append(name)
+    # listvar.set(urls)
+    for url in urls:
+        Lb1.insert(0, url)
     
-    def initUI(self):
-        self.setWindowTitle(self.title)
-        self.setGeometry(self.left, self.top, self.width, self.height)
-        self.setWindowIcon(QIcon('logo.png'))
-        self.center()
+def logCSV(name):
+    name = str(e1.get().strip())
+    interval = int(e2.get().strip())
+    namecache = name
+    intervalcache = interval
+    now = datetime.now()
+    titletime= datetime.date(now).strftime("%Y%m%d")
     
-        # Create url textbox
-        self.urltext = QLineEdit(self)
-        self.urltext.move(20, 20)
-        self.urltext.resize(200,20)
-        self.textbox = QLabel("ENTER WEBSITE URL HERE", self)
-        self.textbox.move(240, 20)
-        self.textbox.resize(200,20)      
+    starttime=time.time() 
+    e1.delete(0, "end")
+    e2.delete(0, "end")
+    while(True):       
+        output = sp.getoutput(f'ping -n 3 {namecache} | find "Packets"')
+        print (output)
+        packetsent = output[20:21]
+        packetreceived = output[34:35]
+        packetloss = output[44:45]
 
-        # Create time interval textbox
-        self.timetext = QLineEdit(self)
-        self.timetext.move(20, 60)
-        self.timetext.resize(200,20)
-        self.textbox = QLabel("ENTER TIME INTERVAL HERE", self)
-        self.textbox.move(240, 60)
-        self.textbox.resize(200,20)   
-        
-        # Create a button in the window
-        self.button = QPushButton('ENTER', self)
-        self.button.move(20,80)
-        
-        # connect button to function on_click
-        self.button.clicked.connect(self.on_click)
-        self.button.show()
+        if(packetsent == packetreceived):
+            status= "UP"
+        elif(packetsent < packetreceived > 0):
+            status="ERROR"
+        else:
+            status="DOWN"
 
-    def center(self):
-            qr = self.frameGeometry()
-            cp = QDesktopWidget().availableGeometry().center()
-            qr.moveCenter(cp)
-            self.move(qr.topLeft())
+        with open(f'{namecache}-PingTest{titletime}.csv', 'a', newline="") as f:
+            writef = csv.writer(f)
+            t = time.localtime()
+            current_time = time.strftime("%H:%M:%S", t)
 
+            writef.writerow([current_time] + [packetsent] + [packetreceived] + [packetloss] + [status])
+
+            time.sleep(intervalcache - ((time.time() - starttime) % intervalcache))
+
+def stopLog():
+    my_string_var.set("current active logs: " + str(threading.active_count()))
     
-    # @pyqtSlot()
-    def on_click(self):
-        name = str(self.urltext.text())
-        interval = int(self.timetext.text())
+my_string_var = StringVar()
+listvar = StringVar()
 
-        now = datetime.now()
-        titletime= datetime.date(now).strftime("%Y%m%d")
+lbl1 = Label(window, textvariable = my_string_var)
+lbl1.place(x=250, y=50)
+lb2 = Label(window, textvariable = listvar)
 
-        starttime=time.time() 
+lbl5=Label(window, text="multithreaded automated ping logger", fg='red', font=("Helvetica", 14))
+lbl5.pack(side="top", ipady=30)
+l1= Label(window, text="enter website URL here \n\n\nenter time interval here",  fg='black', font=("Verdana", 8))
+l1.pack(ipadx=0, padx=10, ipady=4, pady=3, side=LEFT, anchor=NE)
 
-        with open(f'{name}-PingTest{titletime}.csv', 'w', newline="") as outcsv:
-            writer = csv.writer(outcsv)
-            writer.writerow(["Time", "Packet Sent", "Packet Received", "Packet Loss", "Status"])
-        while(True):       
-            output = sp.getoutput(f'ping -n 3 {name} | find "Packets"')
-            print (output)
-            packetsent = output[20:21]
-            packetreceived = output[34:35]
-            packetloss = output[44:45]
+e1=Entry(window, bd=5)
+e1.pack(ipadx=30, padx=20, ipady=4, pady=3, side=TOP, anchor=NW)
 
-            if(packetsent == packetreceived):
-                status= "UP"
-            elif(packetsent <= (packetsent - 1) > 0):
-                status="ERROR"
-            else:
-                status="DOWN"
+e2=Entry(window, text="enter Time here", bd=5)
+e2.pack(ipadx=30, padx=20, ipady=4, pady=3, side=TOP, anchor=NW)
 
-            with open(f'{name}-PingTest{titletime}.csv', 'a', newline="") as f:
-                writef = csv.writer(f)
-                t = time.localtime()
-                current_time = time.strftime("%H:%M:%S", t)
+Lb1 = Listbox(window)
+Lb1.place(relx=0.7, rely=.36, relheight=0.3, relwidth=0.25)
 
-                writef.writerow([current_time] + [packetsent] + [packetreceived] + [packetloss] + [status])
+Start = Button(window,bg='#3F3F3F', fg='#37D028', pady=0, borderwidth=3, relief="ridge", command=lambda:[getUrl()])
+Start.pack(ipadx=30, padx=20, ipady=4, pady=3, side=LEFT, anchor=NW)
 
-                time.sleep(interval - ((time.time() - starttime) % interval))
+Stop = Button(window,bg='red', fg='blue', pady=0, borderwidth=3, relief="ridge", command=lambda:[stopLog()])
+Stop.pack(ipadx=30, padx=25, ipady=4, pady=3, side=LEFT, anchor=NW)
 
 
-                # QMessageBox.question(self, 'Message - pythonspot.com', "You typed: " + textboxValue, QMessageBox.Ok, QMessageBox.Ok)
-                # self.textbox.setText("")
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = App()
-    ex.show()
-    sys.exit(app.exec_())
-
-# print("i-comit.github.io \n")
-# name = input("Enter the website url: ")
-# interval = float(input("Enter interval time in seconds: "))
-
+window.mainloop()
