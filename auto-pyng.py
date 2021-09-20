@@ -4,19 +4,21 @@ import csv
 import time 
 import threading
 from datetime import datetime
+
 window=Tk()
 window.geometry("600x250")
 window.iconbitmap('favicon.ico')
 window.title('     auto-pyng 0.1.1')
 window.eval('tk::PlaceWindow . center')
 
-window.minsize(500, 250)
-window.maxsize(800, 250)
+window.minsize(600, 250)
+window.maxsize(600, 250)
 
 def getUrl():
     urls=[]
     name = str(e1.get().strip())
-    interval = int(e2.get().strip())
+    interval = int(dropdownoptions[dropdownlist.get()])
+    print(interval)
     csvthread= threading.Thread(target=logCSV, args=(1,))
     now = datetime.now()
     titletime= datetime.date(now).strftime("%Y%m%d") 
@@ -32,7 +34,7 @@ def getUrl():
     
 def logCSV(name):
     name = str(e1.get().strip())
-    interval = int(e2.get().strip())
+    interval = int(dropdownoptions[dropdownlist.get()])
     namecache = name
     intervalcache = interval
     now = datetime.now()
@@ -40,20 +42,20 @@ def logCSV(name):
     
     starttime=time.time() 
     e1.delete(0, "end")
-    e2.delete(0, "end")
+    # e2.delete(0, "end")
     while(True):       
         output = sp.getoutput(f'ping -n 3 {namecache} | find "Packets"')
-        print (output)
+        # print (output)
         packetsent = output[20:21]
         packetreceived = output[34:35]
         packetloss = output[44:45]
 
         if(packetsent == packetreceived):
             status= "UP"
-        elif(packetsent < packetreceived > 0):
-            status="ERROR"
-        else:
+        elif(packetsent == packetloss):
             status="DOWN"
+        else:
+            status="ERROR"
 
         with open(f'{namecache}-PingTest{titletime}.csv', 'a', newline="") as f:
             writef = csv.writer(f)
@@ -64,35 +66,66 @@ def logCSV(name):
 
             time.sleep(intervalcache - ((time.time() - starttime) % intervalcache))
 
+
+tipiterator = 0
 def stopLog():
-    my_string_var.set("current active logs: " + str(threading.active_count()))
+    global tipiterator
+    tipiterator += 1
+    active_threads = int(threading.active_count() -1)
+    if(tipiterator == 4):
+        tipiterator = 0
+    tiplist=[
+        "Created By Khiem G Luong",
+        "Current Active Logs: " + str(active_threads),
+        "Do Not Have Too Many (+4) Logs",
+        "Logging Will Stop On Window Close"
+    ]
+    
+    my_string_var.set(tiplist[tipiterator])
+
     
 my_string_var = StringVar()
 listvar = StringVar()
 
-lbl1 = Label(window, textvariable = my_string_var)
-lbl1.place(x=250, y=50)
-lb2 = Label(window, textvariable = listvar)
 
-lbl5=Label(window, text="multithreaded automated ping logger", fg='red', font=("Helvetica", 14))
+
+lbl5=Label(window, text="Multithreaded Automated Ping Logger", fg='red', font=("Helvetica", 14))
 lbl5.pack(side="top", ipady=30)
-l1= Label(window, text="enter website URL here \n\n\nenter time interval here",  fg='black', font=("Verdana", 8))
+l1= Label(window, text="Enter Website URL Here \n\n\nEnter Time Interval Here",  fg='black', font=("Verdana", 9))
 l1.pack(ipadx=0, padx=10, ipady=4, pady=3, side=LEFT, anchor=NE)
-
+lbl1 = Label(window, text="hello world", textvariable=my_string_var, fg='black', font=("Verdana", 9))
+lbl1.place(x= 150, y=190, width=300, height=30)
 e1=Entry(window, bd=5)
 e1.pack(ipadx=30, padx=20, ipady=4, pady=3, side=TOP, anchor=NW)
 
-e2=Entry(window, text="enter Time here", bd=5)
-e2.pack(ipadx=30, padx=20, ipady=4, pady=3, side=TOP, anchor=NW)
+dropdownlist = StringVar(window)
+dropdownoptions = {
+    'Every 5 Seconds': 5,
+    'Every 15 Seconds': 15, 
+    'Every 30 Seconds': 30,
+    'Every Minute': 60,
+    'Every 5 Minutes' : 300,
+    'Every 15 Minutes' : 900,
+    'Every 30 Minutes' : 1800,
+    'Every Hour' : 3600,
+}
+
+dropdownlist.set('Every 5 Seconds') # set the default option
+
+dropdown = OptionMenu(window, dropdownlist, *dropdownoptions)
+dropdown.pack(ipadx=30, padx=20, ipady=4, pady=3, side=TOP, anchor=NW)
+
+# e2=Entry(window, bd=5)
+# e2.pack(ipadx=30, padx=20, ipady=4, pady=3, side=TOP, anchor=NW)
 
 Lb1 = Listbox(window)
 Lb1.place(relx=0.7, rely=.36, relheight=0.3, relwidth=0.25)
 
-Start = Button(window,bg='#3F3F3F', fg='#37D028', pady=0, borderwidth=3, relief="ridge", command=lambda:[getUrl()])
-Start.pack(ipadx=30, padx=20, ipady=4, pady=3, side=LEFT, anchor=NW)
+Start = Button(window,bg='#3F3F3F', fg='white', text="START", pady=0, borderwidth=3, relief="ridge", command=lambda:[getUrl()])
+Start.place(relx=0.05, rely=0.75, width=100, height=30)
 
-Stop = Button(window,bg='red', fg='blue', pady=0, borderwidth=3, relief="ridge", command=lambda:[stopLog()])
-Stop.pack(ipadx=30, padx=25, ipady=4, pady=3, side=LEFT, anchor=NW)
+Help = Button(window,bg='red', fg='white', text="HELP", pady=0, borderwidth=3, relief="ridge", command=lambda:[stopLog()])
+Help.place(relx=0.75, rely=0.75, width=100, height=30)
 
 
 window.mainloop()
