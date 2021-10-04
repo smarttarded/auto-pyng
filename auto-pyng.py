@@ -4,6 +4,8 @@ import csv
 import time 
 import threading
 from datetime import datetime
+import requests
+import pygame
 
 window=Tk()
 window.geometry("600x250")
@@ -28,12 +30,17 @@ def getUrl():
     csvthread.daemon = True
     csvthread.start()
     urls.append(name)
+
     # listvar.set(urls)
     for url in urls:
-        Lb1.insert(0, url)
+        Lb1.insert(0, url)    
+
     
 def logCSV(name):
     name = str(e1.get().strip())
+    response = requests.get('https://' + f'{name}')
+    status_code = int(response.status_code)
+
     interval = int(dropdownoptions[dropdownlist.get()])
     namecache = name
     intervalcache = interval
@@ -49,11 +56,20 @@ def logCSV(name):
         packetsent = output[20:21]
         packetreceived = output[34:35]
         packetloss = output[44:45]
+        print(status_code)
 
         if(packetsent == packetreceived):
             status= "UP"
-        elif(packetsent == packetloss):
+        if(packetsent == packetloss):
             status="DOWN"
+            pygame.mixer.init()
+            pygame.mixer.music.load("alarm16bit.wav")
+            pygame.mixer.music.play()
+        if(status_code == int(503)):
+            status="503"
+            pygame.mixer.init()
+            pygame.mixer.music.load("alarm16bit.wav")
+            pygame.mixer.music.play()
         else:
             status="ERROR"
 
@@ -72,10 +88,11 @@ def stopLog():
     global tipiterator
     tipiterator += 1
     active_threads = int(threading.active_count() -1)
-    if(tipiterator == 4):
+    if(tipiterator == 5):
         tipiterator = 0
     tiplist=[
         "Created By Khiem G Luong",
+        "For Pluriselect-USA",
         "Current Active Logs: " + str(active_threads),
         "Do Not Have Too Many (+4) Logs",
         "Logging Will Stop On Window Close"
