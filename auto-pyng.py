@@ -70,7 +70,7 @@ def logCSV(name):
             pygame.mixer.init()
             pygame.mixer.music.load("alarm16bit.wav")
             pygame.mixer.music.play()
-        else:
+        if(packetsent != packetreceived):
             status="ERROR"
 
         with open(f'{namecache}-PingTest{titletime}.csv', 'a', newline="") as f:
@@ -81,7 +81,6 @@ def logCSV(name):
             writef.writerow([current_time] + [packetsent] + [packetreceived] + [packetloss] + [status])
 
             time.sleep(intervalcache - ((time.time() - starttime) % intervalcache))
-
 
 tipiterator = 0
 def stopLog():
